@@ -1,10 +1,12 @@
 # FireConfig
 
+[![CI](https://github.com/Ugesh-Praavin/fireconfig/actions/workflows/test.yml/badge.svg)](https://github.com/Ugesh-Praavin/fireconfig/actions/workflows/test.yml)
+
 Firebase configuration CLI for JavaScript and TypeScript projects.
 
 FireConfig automates the repetitive parts of connecting a project to Firebase. It detects the project environment, verifies Firebase CLI authentication, lets you select a Firebase project and Web App, retrieves the Firebase SDK configuration, and generates the Firebase initialization file.
 
-> **Status:** Early development — v0.1.0
+> **Status:** v0.1.0
 
 ## Overview
 
@@ -80,7 +82,7 @@ FireConfig can offer to install the Firebase CLI when it is not available.
 Install FireConfig globally:
 
 ```bash
-npm install -g fireconfig
+npm install -g fireconfigcli
 ```
 
 Verify the installation:
