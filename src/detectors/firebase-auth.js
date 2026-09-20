@@ -1,10 +1,8 @@
 const { spawnSync } = require("child_process");
 
-function checkFirebaseAuth() {
-    let result;
-
+function runFirebaseAuthCommand() {
     if (process.platform === "win32") {
-        result = spawnSync(
+        return spawnSync(
             process.env.ComSpec || "cmd.exe",
             ["/d", "/s", "/c", "firebase", "login:list"],
             {
@@ -12,12 +10,22 @@ function checkFirebaseAuth() {
                 windowsHide: true,
             }
         );
-    } else {
-        result = spawnSync("firebase", ["login:list"], {
+    }
+
+    return spawnSync(
+        "firebase",
+        ["login:list"],
+        {
             encoding: "utf8",
             windowsHide: true,
-        });
-    }
+        }
+    );
+}
+
+function checkFirebaseAuth(
+    commandRunner = runFirebaseAuthCommand
+) {
+    const result = commandRunner();
 
     if (result.error || result.status !== 0) {
         return {
@@ -25,7 +33,8 @@ function checkFirebaseAuth() {
         };
     }
 
-    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+    const output =
+        `${result.stdout || ""}\n${result.stderr || ""}`;
 
     const authenticated =
         /Logged in as\s+\S+/i.test(output);

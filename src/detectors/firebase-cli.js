@@ -1,10 +1,8 @@
 const { spawnSync } = require("child_process");
 
-function detectFirebaseCLI() {
-    let result;
-
+function runFirebaseVersionCommand() {
     if (process.platform === "win32") {
-        result = spawnSync(
+        return spawnSync(
             process.env.ComSpec || "cmd.exe",
             ["/d", "/s", "/c", "firebase", "--version"],
             {
@@ -12,12 +10,22 @@ function detectFirebaseCLI() {
                 windowsHide: true,
             }
         );
-    } else {
-        result = spawnSync("firebase", ["--version"], {
+    }
+
+    return spawnSync(
+        "firebase",
+        ["--version"],
+        {
             encoding: "utf8",
             windowsHide: true,
-        });
-    }
+        }
+    );
+}
+
+function detectFirebaseCLI(
+    commandRunner = runFirebaseVersionCommand
+) {
+    const result = commandRunner();
 
     if (result.error || result.status !== 0) {
         return {

@@ -87,7 +87,15 @@ test("doctor passes project-specific checks for a healthy project", () => {
         config: validConfig,
     });
 
-    const checks = runDoctorChecks(projectRoot);
+    const checks = runDoctorChecks(projectRoot, {
+        detectFirebaseCLI: () => ({
+            installed: true,
+            version: "15.30.2",
+        }),
+        checkFirebaseAuth: () => ({
+            authenticated: true,
+        }),
+    });
 
     const project = checks.find(
         (check) => check.name === "Project"
@@ -114,8 +122,15 @@ test("doctor passes project-specific checks for a healthy project", () => {
 test("doctor detects missing Firebase config", () => {
     const projectRoot = createTempProject();
 
-    const checks = runDoctorChecks(projectRoot);
-
+    const checks = runDoctorChecks(projectRoot, {
+        detectFirebaseCLI: () => ({
+            installed: true,
+            version: "15.30.2",
+        }),
+        checkFirebaseAuth: () => ({
+            authenticated: true,
+        }),
+    });
     const firebaseConfig = checks.find(
         (check) => check.name === "Firebase config"
     );
@@ -132,8 +147,15 @@ test("doctor detects incomplete Firebase config", () => {
         config: incompleteConfig,
     });
 
-    const checks = runDoctorChecks(projectRoot);
-
+    const checks = runDoctorChecks(projectRoot, {
+        detectFirebaseCLI: () => ({
+            installed: true,
+            version: "15.30.2",
+        }),
+        checkFirebaseAuth: () => ({
+            authenticated: true,
+        }),
+    });
     const firebaseConfig = checks.find(
         (check) => check.name === "Firebase config"
     );

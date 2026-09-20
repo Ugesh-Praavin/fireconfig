@@ -7,7 +7,7 @@ const {
     checkFirebaseConfigFile,
 } = require("./firebase-config");
 
-function checkProject(projectRoot = process.cwd()) {
+function checkProject(projectRoot) {
     const project = detectProject(projectRoot);
 
     return {
@@ -21,7 +21,7 @@ function checkProject(projectRoot = process.cwd()) {
     };
 }
 
-function checkPackageManager(projectRoot = process.cwd()) {
+function checkPackageManager(projectRoot) {
     const packageManager =
         detectPackageManager(projectRoot);
 
@@ -36,8 +36,10 @@ function checkPackageManager(projectRoot = process.cwd()) {
     };
 }
 
-function checkFirebaseCLI() {
-    const firebaseCLI = detectFirebaseCLI();
+function checkFirebaseCLI(
+    detectCLI = detectFirebaseCLI
+) {
+    const firebaseCLI = detectCLI();
 
     return {
         name: "Firebase CLI",
@@ -49,8 +51,10 @@ function checkFirebaseCLI() {
     };
 }
 
-function checkFirebaseAuthentication() {
-    const auth = checkFirebaseAuth();
+function checkFirebaseAuthentication(
+    checkAuth = checkFirebaseAuth
+) {
+    const auth = checkAuth();
 
     return {
         name: "Firebase authentication",
@@ -62,7 +66,7 @@ function checkFirebaseAuthentication() {
     };
 }
 
-function checkFirebaseSDK(projectRoot = process.cwd()) {
+function checkFirebaseSDK(projectRoot) {
     const sdk = detectFirebaseSDK(projectRoot);
 
     return {
@@ -75,7 +79,7 @@ function checkFirebaseSDK(projectRoot = process.cwd()) {
     };
 }
 
-function checkFirebaseConfig(projectRoot = process.cwd()) {
+function checkFirebaseConfig(projectRoot) {
     const result =
         checkFirebaseConfigFile(projectRoot);
 
@@ -87,12 +91,23 @@ function checkFirebaseConfig(projectRoot = process.cwd()) {
     };
 }
 
-function runDoctorChecks(projectRoot = process.cwd()) {
+function runDoctorChecks(
+    projectRoot = process.cwd(),
+    dependencies = {}
+) {
+    const detectCLI =
+        dependencies.detectFirebaseCLI ||
+        detectFirebaseCLI;
+
+    const checkAuth =
+        dependencies.checkFirebaseAuth ||
+        checkFirebaseAuth;
+
     return [
         checkProject(projectRoot),
         checkPackageManager(projectRoot),
-        checkFirebaseCLI(),
-        checkFirebaseAuthentication(),
+        checkFirebaseCLI(detectCLI),
+        checkFirebaseAuthentication(checkAuth),
         checkFirebaseSDK(projectRoot),
         checkFirebaseConfig(projectRoot),
     ];
