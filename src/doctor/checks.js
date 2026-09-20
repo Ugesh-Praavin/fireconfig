@@ -3,9 +3,12 @@ const { detectPackageManager } = require("../detectors/package-manager");
 const { detectFirebaseCLI } = require("../detectors/firebase-cli");
 const { checkFirebaseAuth } = require("../detectors/firebase-auth");
 const { detectFirebaseSDK } = require("../detectors/firebase-sdk");
-const {
-    checkFirebaseConfigFile,
-} = require("./firebase-config");
+const { checkFirebaseConfigFile } = require("./firebase-config");
+const { checkNextjsFirebaseEnv } = require("./nextjs-env");
+const { checkReactCraFirebaseEnv } = require("./react-cra-env");
+const { detectReactNativeFirebase, } = require("../detectors/react-native-firebase");
+const { checkReactNativeFirebaseConfig,
+} = require("./react-native");
 
 function checkProject(projectRoot) {
     const project = detectProject(projectRoot);
@@ -67,7 +70,12 @@ function checkFirebaseAuthentication(
 }
 
 function checkFirebaseSDK(projectRoot) {
-    const sdk = detectFirebaseSDK(projectRoot);
+    const project = detectProject(projectRoot);
+
+    const sdk =
+        project.type === "react-native"
+            ? detectReactNativeFirebase(projectRoot)
+            : detectFirebaseSDK(projectRoot);
 
     return {
         name: "Firebase SDK",
@@ -80,8 +88,41 @@ function checkFirebaseSDK(projectRoot) {
 }
 
 function checkFirebaseConfig(projectRoot) {
-    const result =
-        checkFirebaseConfigFile(projectRoot);
+    const project = detectProject(projectRoot);
+
+    let result;
+
+    switch (project.type) {
+        case "nextjs":
+            result =
+                checkNextjsFirebaseEnv(projectRoot);
+            break;
+
+        case "react":
+            result =
+                checkFirebaseConfigFile(projectRoot);
+            break;
+        case "react-cra":
+            result =
+                checkReactCraFirebaseEnv(projectRoot);
+            break;
+        case "react-native":
+            result =
+                checkReactNativeFirebaseConfig(
+                    projectRoot
+                );
+            break;
+        default:
+            return {
+                name: "Firebase config",
+                passed: false,
+                message:
+                    "Firebase configuration strategy not implemented",
+                details: {
+                    projectType: project.type,
+                },
+            };
+    }
 
     return {
         name: "Firebase config",
