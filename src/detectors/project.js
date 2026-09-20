@@ -56,6 +56,20 @@ function detectProject(projectRoot = process.cwd()) {
     }
 
     if (dependencies.react) {
+        if (dependencies.vite) {
+            return {
+                type: "react-vite",
+                name: packageJson.name || null,
+            };
+        }
+
+        if (dependencies["react-scripts"]) {
+            return {
+                type: "react-cra",
+                name: packageJson.name || null,
+            };
+        }
+
         return {
             type: "react",
             name: packageJson.name || null,

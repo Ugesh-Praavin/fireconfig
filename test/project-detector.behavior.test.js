@@ -88,3 +88,30 @@ test("returns unknown for unsupported project", () => {
 
     assert.equal(result.type, "unknown");
 });
+test("detects React + Vite project", () => {
+    const projectRoot = createProject({
+        name: "test-react-vite",
+        dependencies: {
+            react: "^19.0.0",
+            vite: "^7.0.0",
+        },
+    });
+
+    const result = detectProject(projectRoot);
+
+    assert.equal(result.type, "react-vite");
+});
+
+test("detects React + Create React App project", () => {
+    const projectRoot = createProject({
+        name: "test-react-cra",
+        dependencies: {
+            react: "^19.0.0",
+            "react-scripts": "^5.0.1",
+        },
+    });
+
+    const result = detectProject(projectRoot);
+
+    assert.equal(result.type, "react-cra");
+});

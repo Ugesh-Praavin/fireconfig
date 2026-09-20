@@ -4,7 +4,7 @@
 
 Firebase configuration CLI for JavaScript and TypeScript projects.
 
-FireConfig automates the repetitive parts of connecting a project to Firebase. It detects the project environment, verifies Firebase CLI authentication, lets you select a Firebase project and Web App, retrieves the Firebase SDK configuration, and generates the Firebase initialization file.
+FireConfig automates the repetitive parts of connecting a project to Firebase. It detects the project environment, verifies Firebase CLI authentication, lets you select a Firebase project and Web App, retrieves the Firebase SDK configuration, installs the Firebase SDK when needed, and generates framework-appropriate Firebase configuration.
 
 > **Status:** v0.1.0
 
@@ -18,7 +18,7 @@ Setting up Firebase in a new project typically involves several manual steps:
 * Finding the corresponding Web App
 * Retrieving the SDK configuration
 * Installing the Firebase SDK
-* Creating the Firebase initialization code
+* Creating the Firebase configuration
 * Verifying that the configuration is complete
 
 FireConfig brings these steps into a single CLI workflow.
@@ -34,7 +34,7 @@ Project
    ├── Find Web App
    ├── Retrieve SDK configuration
    ├── Verify Firebase SDK
-   └── Generate configuration
+   └── Generate framework-specific configuration
 ```
 
 ## Features
@@ -49,7 +49,8 @@ Project
 * Firebase Web App discovery
 * Firebase SDK configuration retrieval
 * Firebase SDK detection
-* Firebase configuration generation
+* Automatic Firebase SDK installation
+* Framework-specific Firebase configuration generation
 * Existing configuration protection
 * Firebase setup diagnostics through `fireconfig doctor`
 * Automated test suite
@@ -57,16 +58,18 @@ Project
 
 ## Supported Projects
 
-FireConfig currently detects:
+FireConfig currently supports the following project types:
 
-| Framework    | Detection | Configuration workflow |
-| ------------ | --------- | ---------------------- |
-| React        | Supported | Supported              |
-| Next.js      | Supported | Planned                |
-| React Native | Supported | Planned                |
-| Expo         | Supported | Planned                |
+| Framework                | Detection | Configuration workflow |
+| ------------------------ | --------- | ---------------------- |
+| React                    | Supported | Supported              |
+| React + Vite             | Supported | Supported              |
+| React + Create React App | Supported | Supported              |
+| Next.js                  | Supported | Supported              |
+| React Native             | Supported | Supported    |
+| Expo                     | Supported | Not implemented yet    |
 
-The current release focuses on the standard Firebase Web SDK workflow. Framework-specific configuration for Next.js, React Native, and Expo is planned for subsequent releases.
+React Native projects are automatically connected to Firebase through the Android Firebase configuration workflow. Expo configuration is planned for a future release.
 
 ## Requirements
 
@@ -76,6 +79,8 @@ The current release focuses on the standard Firebase Web SDK workflow. Framework
 * npm, pnpm, Yarn, or Bun
 
 FireConfig can offer to install the Firebase CLI when it is not available.
+
+FireConfig can also install the Firebase JavaScript SDK when it is not already installed.
 
 ## Installation
 
@@ -112,13 +117,8 @@ The initialization workflow:
 9. Finds the project's Web App.
 10. Retrieves the Web SDK configuration.
 11. Verifies that the Firebase JavaScript SDK is installed.
-12. Generates the Firebase configuration file.
-
-The generated file is:
-
-```text
-src/firebase/config.js
-```
+12. Offers to install the Firebase SDK if required.
+13. Generates the framework-specific Firebase configuration.
 
 ## Commands
 
@@ -143,15 +143,15 @@ Example:
 ```text
 FireConfig Doctor
 
-✓ Project: react project detected
+✓ Project: react-cra project detected
 ✓ Package manager: npm detected
 ✓ Firebase CLI: Firebase CLI 15.30.2 detected
 ✓ Firebase authentication: Firebase authentication detected
 ✓ Firebase SDK: Firebase SDK ^12.19.0 detected
-✓ Firebase config: Firebase configuration is valid
+✓ Firebase config: React CRA Firebase environment configuration is valid
 
 6/6 checks passed.
-Firebase setup looks good!
+🔥 Firebase setup looks good!
 ```
 
 ### Display help
@@ -166,6 +166,112 @@ fireconfig --help
 fireconfig --version
 ```
 
+## Framework Configuration
+
+FireConfig generates configuration according to the detected project type.
+
+### React
+
+Standard React projects use:
+
+```text
+src/firebase/config.js
+```
+
+Example:
+
+```javascript
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+    apiKey: "...",
+    authDomain: "...",
+    projectId: "...",
+    storageBucket: "...",
+    messagingSenderId: "...",
+    appId: "..."
+};
+
+export const app = initializeApp(firebaseConfig);
+```
+
+### React + Vite
+
+Vite projects use:
+
+```text
+.env.local
+```
+
+with the `VITE_` prefix:
+
+```text
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+### React + Create React App
+
+Create React App projects use:
+
+```text
+.env.local
+```
+
+with the `REACT_APP_` prefix:
+
+```text
+REACT_APP_FIREBASE_API_KEY=...
+REACT_APP_FIREBASE_AUTH_DOMAIN=...
+REACT_APP_FIREBASE_PROJECT_ID=...
+REACT_APP_FIREBASE_STORAGE_BUCKET=...
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
+REACT_APP_FIREBASE_APP_ID=...
+```
+
+### Next.js
+
+Next.js projects use:
+
+```text
+.env.local
+```
+
+with the `NEXT_PUBLIC_` prefix:
+
+```text
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+## Existing Configuration Protection
+
+FireConfig never silently overwrites an existing configuration file.
+
+For example, if:
+
+```text
+.env.local
+```
+
+already exists for a framework that uses environment configuration, FireConfig will stop instead of replacing the existing file.
+
+Likewise, for standard React projects, FireConfig will not overwrite:
+
+```text
+src/firebase/config.js
+```
+
+This protects existing Firebase configuration and prevents accidental data loss.
+
 ## Package Manager Detection
 
 FireConfig identifies the package manager from the project's lockfile.
@@ -177,34 +283,7 @@ FireConfig identifies the package manager from the project's lockfile.
 | Yarn            | `yarn.lock`               |
 | Bun             | `bun.lock` or `bun.lockb` |
 
-## Generated Configuration
-
-For a Firebase Web App, FireConfig generates a configuration similar to:
-
-```javascript
-import { initializeApp } from "firebase/app";
-
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
-
-export const app = initializeApp(firebaseConfig);
-```
-
-FireConfig only writes the configuration file if it does not already exist.
-
-If:
-
-```text
-src/firebase/config.js
-```
-
-already exists, FireConfig will not overwrite it.
+The detected package manager is used when FireConfig needs to install the Firebase SDK or Firebase CLI.
 
 ## Security
 
@@ -218,9 +297,16 @@ firebase login
 
 FireConfig does not request or store Firebase service-account private keys.
 
-The Firebase Web SDK configuration generated by FireConfig contains client-side configuration values intended for use by web applications. These values should still be protected by appropriate Firebase Security Rules and other application-level security controls.
+The Firebase Web SDK configuration generated by FireConfig contains client-side configuration values intended for use by web applications. Firebase Security Rules and appropriate application-level security controls should still be used to protect application data and resources.
 
-FireConfig also avoids silently overwriting existing configuration files.
+FireConfig also:
+
+* Avoids silently overwriting configuration
+* Uses explicit process execution
+* Avoids unnecessary `shell` execution
+* Does not implement custom Firebase OAuth
+* Does not request service-account private keys
+* Keeps Firebase CLI authentication delegated to the official Firebase tooling
 
 ## Development
 
@@ -261,14 +347,23 @@ FireConfig uses Node.js's built-in test runner.
 The test suite covers:
 
 * Project detection
+* React detection
+* Vite detection
+* Create React App detection
+* Next.js detection
+* React Native detection
+* Expo detection
 * Package manager detection
 * Firebase CLI detection
 * Firebase authentication detection
 * Firebase SDK detection
+* Firebase SDK installation
 * Firebase configuration validation
 * Firebase configuration generation
+* Framework-specific environment generation
 * Existing configuration protection
 * Doctor checks
+* Integration behavior
 
 Run:
 
@@ -283,12 +378,16 @@ All tests are also executed automatically through GitHub Actions on pushes and p
 ```text
 fireconfig/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md
+│   │   └── feature_request.md
 │   └── workflows/
 │       └── test.yml
 ├── bin/
 │   └── index.js
 ├── src/
 │   ├── auth/
+│   ├── config/
 │   ├── detectors/
 │   ├── doctor/
 │   ├── firebase/
@@ -297,12 +396,15 @@ fireconfig/
 │   └── ui/
 ├── test/
 ├── .gitignore
+├── CONTRIBUTING.md
 ├── LICENSE
 ├── package.json
 └── README.md
 ```
 
-The project is organized around small, independently testable modules. Detection, Firebase operations, configuration generation, installation, authentication, and diagnostics are kept separate from the CLI entry point.
+The project is organized around small, independently testable modules.
+
+Detection, Firebase operations, configuration generation, installation, authentication, and diagnostics are kept separate from the CLI entry point.
 
 ## Roadmap
 
@@ -318,23 +420,35 @@ The project is organized around small, independently testable modules. Detection
 * [x] Firebase Web App discovery
 * [x] SDK configuration retrieval
 * [x] Firebase SDK detection
-* [x] Configuration generation
+* [x] Firebase SDK installation
+* [x] React configuration generation
 * [x] Existing configuration protection
 * [x] `fireconfig doctor`
 * [x] Automated tests
 * [x] GitHub Actions CI
 * [x] npm package preparation
+* [x] Next.js configuration strategy
+* [x] Next.js environment generation
+* [x] React + Vite environment generation
+* [x] React + Create React App environment generation
+* [x] Framework-specific doctor checks
+* [x] Firebase SDK installation tests
+* [x] CRA integration testing
 
-### Planned
+### v0.2.x
 
-* [ ] Next.js environment configuration
-* [ ] Environment variable generation
-* [ ] React Native configuration
+* [x] Next.js environment configuration
+* [x] React environment strategy
+* [x] React + Vite environment configuration
+* [x] React + Create React App environment configuration
+* [x] Framework-specific diagnostics
+* [x] Expanded integration coverage
+* [x] React Native configuration
 * [ ] Expo configuration
-* [ ] Framework-specific Firebase setup
+* [ ] Framework-specific Firebase setup improvements
 * [ ] Additional Firebase service configuration
 * [ ] Expanded diagnostics
-* [ ] Integration test coverage
+* [ ] Documentation and examples for additional frameworks
 
 ## Contributing
 
@@ -356,6 +470,8 @@ npm test
 7. Open a pull request.
 
 Please keep changes focused and include tests for new functionality where appropriate.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
