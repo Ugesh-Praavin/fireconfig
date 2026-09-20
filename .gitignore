@@ -36,3 +36,6 @@ temp/
 
 # Test artifacts
 *.tmp
+
+# npm package artifacts
+*.tgz

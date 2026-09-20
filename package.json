@@ -27,9 +27,19 @@
   "bin": {
     "fireconfig": "bin/index.js"
   },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test",
-    "test:watch": "node --test --watch"
+    "test:watch": "node --test --watch",
+    "prepublishOnly": "npm test"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.7.2"
