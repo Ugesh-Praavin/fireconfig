@@ -1,0 +1,37 @@
+{
+  "name": "fireconfig",
+  "version": "0.1.0",
+  "description": "Firebase configuration CLI for React, Next.js, React Native and Expo projects",
+  "keywords": [
+    "firebase",
+    "cli",
+    "react",
+    "nextjs",
+    "react-native",
+    "expo",
+    "configuration",
+    "developer-tools"
+  ],
+  "homepage": "https://github.com/Ugesh-Praavin/fireconfig#readme",
+  "bugs": {
+    "url": "https://github.com/Ugesh-Praavin/fireconfig/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ugesh-Praavin/fireconfig.git"
+  },
+  "license": "MIT",
+  "author": "Ugesh Praavin D",
+  "type": "commonjs",
+  "main": "bin/index.js",
+  "bin": {
+    "fireconfig": "bin/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.7.2"
+  }
+}
