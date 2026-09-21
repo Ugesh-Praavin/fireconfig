@@ -1,15 +1,20 @@
 {
   "name": "fireconfigcli",
   "version": "0.3.0",
-  "description": "Firebase configuration CLI for React, Next.js, React Native and Expo projects",
+  "description": "Automate Firebase configuration for JavaScript and TypeScript projects.",
   "keywords": [
     "firebase",
+    "firebase-cli",
+    "firebase-config",
     "cli",
+    "javascript",
+    "typescript",
     "react",
     "nextjs",
     "react-native",
     "expo",
     "configuration",
+    "automation",
     "developer-tools"
   ],
   "homepage": "https://github.com/Ugesh-Praavin/fireconfig#readme",
