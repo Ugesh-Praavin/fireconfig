@@ -6,7 +6,7 @@ Firebase configuration CLI for JavaScript and TypeScript projects.
 
 FireConfig automates the repetitive parts of connecting a project to Firebase. It detects the project environment, verifies Firebase CLI authentication, lets you select a Firebase project and Web App, retrieves the Firebase SDK configuration, installs the Firebase SDK when needed, and generates framework-appropriate Firebase configuration.
 
-> **Status:** v0.1.0
+> **Status:** v0.2.1
 
 ## Overview
 
