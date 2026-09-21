@@ -1,3 +1,5 @@
+const path = require("path");
+const fs = require("fs");
 const { detectProject } = require("../detectors/project");
 const { detectPackageManager } = require("../detectors/package-manager");
 const { detectFirebaseCLI } = require("../detectors/firebase-cli");
@@ -6,9 +8,9 @@ const { detectFirebaseSDK } = require("../detectors/firebase-sdk");
 const { checkFirebaseConfigFile } = require("./firebase-config");
 const { checkNextjsFirebaseEnv } = require("./nextjs-env");
 const { checkReactCraFirebaseEnv } = require("./react-cra-env");
-const { detectReactNativeFirebase, } = require("../detectors/react-native-firebase");
-const { checkReactNativeFirebaseConfig,
-} = require("./react-native");
+const { checkReactViteFirebaseEnv } = require("./react-vite-env");
+const { detectReactNativeFirebase } = require("../detectors/react-native-firebase");
+const { checkReactNativeFirebaseConfig } = require("./react-native");
 
 function checkProject(projectRoot) {
     const project = detectProject(projectRoot);
@@ -89,35 +91,111 @@ function checkFirebaseSDK(projectRoot) {
 
 function checkFirebaseConfig(projectRoot) {
     const project = detectProject(projectRoot);
+    const configPath = path.join(projectRoot, "src", "firebase", "config.js");
+    const hasConfigJs = fs.existsSync(configPath);
 
     let result;
 
     switch (project.type) {
-        case "nextjs":
-            result =
-                checkNextjsFirebaseEnv(projectRoot);
+        case "nextjs": {
+            const envRes = checkNextjsFirebaseEnv(projectRoot);
+            if (!envRes.passed) {
+                result = envRes;
+                break;
+            }
+            if (hasConfigJs) {
+                const initRes = checkFirebaseConfigFile(
+                    projectRoot,
+                    "process.env",
+                    "NEXT_PUBLIC_FIREBASE_"
+                );
+                if (!initRes.passed) {
+                    result = initRes;
+                    break;
+                }
+            }
+            result = envRes;
+            break;
+        }
+
+        case "react-vite": {
+            const envRes = checkReactViteFirebaseEnv(projectRoot);
+            if (!envRes.passed) {
+                result = envRes;
+                break;
+            }
+            if (hasConfigJs) {
+                const initRes = checkFirebaseConfigFile(
+                    projectRoot,
+                    "import.meta.env",
+                    "VITE_FIREBASE_"
+                );
+                if (!initRes.passed) {
+                    result = initRes;
+                    break;
+                }
+            }
+            result = envRes;
+            break;
+        }
+
+        case "react-cra": {
+            const envRes = checkReactCraFirebaseEnv(projectRoot);
+            if (!envRes.passed) {
+                result = envRes;
+                break;
+            }
+            if (hasConfigJs) {
+                const initRes = checkFirebaseConfigFile(
+                    projectRoot,
+                    "process.env",
+                    "REACT_APP_FIREBASE_"
+                );
+                if (!initRes.passed) {
+                    result = initRes;
+                    break;
+                }
+            }
+            result = envRes;
+            break;
+        }
+
+        case "react": {
+            // Check both env and config if env exists; otherwise check config file
+            const envPath = path.join(projectRoot, ".env.local");
+            if (fs.existsSync(envPath)) {
+                const envRes = checkReactCraFirebaseEnv(projectRoot);
+                if (!envRes.passed) {
+                    result = envRes;
+                    break;
+                }
+                if (hasConfigJs) {
+                    const initRes = checkFirebaseConfigFile(
+                        projectRoot,
+                        "process.env",
+                        "REACT_APP_FIREBASE_"
+                    );
+                    if (!initRes.passed) {
+                        result = initRes;
+                        break;
+                    }
+                }
+                result = envRes;
+            } else {
+                result = checkFirebaseConfigFile(projectRoot);
+            }
+            break;
+        }
+
+        case "react-native":
+            result = checkReactNativeFirebaseConfig(projectRoot);
             break;
 
-        case "react":
-            result =
-                checkFirebaseConfigFile(projectRoot);
-            break;
-        case "react-cra":
-            result =
-                checkReactCraFirebaseEnv(projectRoot);
-            break;
-        case "react-native":
-            result =
-                checkReactNativeFirebaseConfig(
-                    projectRoot
-                );
-            break;
         default:
             return {
                 name: "Firebase config",
                 passed: false,
-                message:
-                    "Firebase configuration strategy not implemented",
+                message: "Firebase configuration strategy not implemented",
                 details: {
                     projectType: project.type,
                 },

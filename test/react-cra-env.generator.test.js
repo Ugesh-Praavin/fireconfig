@@ -17,7 +17,7 @@ function createTempProject() {
     );
 }
 
-test("generates React CRA Firebase environment file", () => {
+test("generates React CRA Firebase environment file", async () => {
     const projectRoot = createTempProject();
 
     const config = {
@@ -29,7 +29,7 @@ test("generates React CRA Firebase environment file", () => {
         appId: "1:123456789:web:test",
     };
 
-    const result = generateReactCraEnv(
+    const result = await generateReactCraEnv(
         projectRoot,
         config
     );
@@ -82,7 +82,7 @@ test("generates React CRA Firebase environment file", () => {
     );
 });
 
-test("does not overwrite existing React CRA environment file", () => {
+test("safely merges into existing React CRA environment file without losing existing variables", async () => {
     const projectRoot = createTempProject();
 
     const envPath = path.join(
@@ -99,7 +99,7 @@ test("does not overwrite existing React CRA environment file", () => {
         "utf8"
     );
 
-    const result = generateReactCraEnv(
+    const result = await generateReactCraEnv(
         projectRoot,
         {
             apiKey: "new-key",
@@ -113,19 +113,20 @@ test("does not overwrite existing React CRA environment file", () => {
 
     assert.equal(
         result.success,
-        false
-    );
-
-    assert.equal(
-        result.exists,
         true
     );
 
     assert.equal(
-        fs.readFileSync(
-            envPath,
-            "utf8"
-        ),
-        existingContent
+        result.path,
+        envPath
     );
+
+    const content = fs.readFileSync(
+        envPath,
+        "utf8"
+    );
+
+    assert.match(content, /EXISTING_VALUE=keep-me/);
+    assert.match(content, /REACT_APP_FIREBASE_API_KEY=new-key/);
+    assert.match(content, /REACT_APP_FIREBASE_PROJECT_ID=new-project/);
 });

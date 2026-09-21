@@ -26,10 +26,10 @@ const firebaseConfig = {
     appId: "1:123456789:web:test",
 };
 
-test("generates React Vite Firebase environment file", () => {
+test("generates React Vite Firebase environment file", async () => {
     const projectRoot = createTempProject();
 
-    const result = generateReactViteEnv(
+    const result = await generateReactViteEnv(
         projectRoot,
         firebaseConfig
     );
@@ -82,7 +82,7 @@ test("generates React Vite Firebase environment file", () => {
     );
 });
 
-test("does not overwrite existing React Vite environment file", () => {
+test("safely merges into existing React Vite environment file", async () => {
     const projectRoot = createTempProject();
 
     const envPath = path.join(
@@ -99,16 +99,16 @@ test("does not overwrite existing React Vite environment file", () => {
         "utf8"
     );
 
-    const result = generateReactViteEnv(
+    const result = await generateReactViteEnv(
         projectRoot,
         firebaseConfig
     );
 
-    assert.equal(result.success, false);
-    assert.equal(result.exists, true);
+    assert.equal(result.success, true);
+    assert.equal(result.path, envPath);
 
-    assert.equal(
-        fs.readFileSync(envPath, "utf8"),
-        existingContent
-    );
+    const content = fs.readFileSync(envPath, "utf8");
+    assert.match(content, /EXISTING_VALUE=keep-this/);
+    assert.match(content, /VITE_FIREBASE_API_KEY=test-api-key/);
+    assert.match(content, /VITE_FIREBASE_PROJECT_ID=test-project/);
 });

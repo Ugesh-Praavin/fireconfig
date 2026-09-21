@@ -14,7 +14,7 @@ function createTempProject() {
     );
 }
 
-test("generates Next.js Firebase environment file", () => {
+test("generates Next.js Firebase environment file", async () => {
     const projectRoot = createTempProject();
 
     const config = {
@@ -26,7 +26,7 @@ test("generates Next.js Firebase environment file", () => {
         appId: "1:123456789:web:abcdef",
     };
 
-    const result = generateNextjsEnv(
+    const result = await generateNextjsEnv(
         projectRoot,
         config
     );
@@ -78,7 +78,8 @@ test("generates Next.js Firebase environment file", () => {
         /NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef/
     );
 });
-test("does not overwrite existing Next.js environment file", () => {
+
+test("safely merges into existing Next.js environment file without losing existing variables", async () => {
     const projectRoot = createTempProject();
 
     const envPath = path.join(
@@ -87,7 +88,7 @@ test("does not overwrite existing Next.js environment file", () => {
     );
 
     const existingContent =
-        "NEXT_PUBLIC_FIREBASE_API_KEY=existing-value\n";
+        "EXISTING_VALUE=keep-this\nNEXT_PUBLIC_FIREBASE_API_KEY=existing-value\n";
 
     fs.writeFileSync(
         envPath,
@@ -104,13 +105,14 @@ test("does not overwrite existing Next.js environment file", () => {
         appId: "1:987654321:web:new",
     };
 
-    const result = generateNextjsEnv(
+    // User declines overwriting conflicting apiKey
+    const result = await generateNextjsEnv(
         projectRoot,
-        config
+        config,
+        { confirmOverwrite: async () => false }
     );
 
-    assert.equal(result.success, false);
-    assert.equal(result.exists, true);
+    assert.equal(result.success, true);
     assert.equal(result.path, envPath);
 
     const content = fs.readFileSync(
@@ -118,8 +120,11 @@ test("does not overwrite existing Next.js environment file", () => {
         "utf8"
     );
 
-    assert.equal(
-        content,
-        existingContent
-    );
+    // Existing unrelated value must be preserved
+    assert.match(content, /EXISTING_VALUE=keep-this/);
+    // Conflicting value preserved as user declined overwrite
+    assert.match(content, /NEXT_PUBLIC_FIREBASE_API_KEY=existing-value/);
+    // Other missing variables should be appended
+    assert.match(content, /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=new\.firebaseapp\.com/);
+    assert.match(content, /NEXT_PUBLIC_FIREBASE_PROJECT_ID=new-project/);
 });

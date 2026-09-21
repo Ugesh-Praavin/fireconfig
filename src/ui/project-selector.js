@@ -1,17 +1,27 @@
 const { select } = require("@inquirer/prompts");
 
-async function selectFirebaseProject(projects) {
-    if (!projects.length) {
+const CREATE_PROJECT_SENTINEL = "__CREATE_FIREBASE_PROJECT__";
+
+async function selectFirebaseProject(projects, promptSelect = select) {
+    if (!projects || !projects.length) {
         console.log("\n❌ No Firebase projects found.");
         return null;
     }
 
-    const selectedProject = await select({
-        message: "Select a Firebase project:",
-        choices: projects.map((project) => ({
+    const choices = [
+        {
+            name: "Create a new Firebase project",
+            value: CREATE_PROJECT_SENTINEL,
+        },
+        ...projects.map((project) => ({
             name: `${project.displayName} (${project.projectId})`,
             value: project,
         })),
+    ];
+
+    const selectedProject = await promptSelect({
+        message: "Select a Firebase project:",
+        choices,
     });
 
     return selectedProject;
@@ -19,4 +29,5 @@ async function selectFirebaseProject(projects) {
 
 module.exports = {
     selectFirebaseProject,
+    CREATE_PROJECT_SENTINEL,
 };
