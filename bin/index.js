@@ -31,7 +31,7 @@ const { generateReactNativeAndroidConfig } = require("../src/generators/react-na
 const args = process.argv.slice(2);
 const command = args[0];
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.1";
 
 function showHelp() {
     console.log(`
@@ -224,6 +224,7 @@ async function init() {
     // 7. Find Firebase Web App
     // --------------------------------------------------
 
+    let sdkResult;
 
     if (project.type !== "react-native") {
 
@@ -273,7 +274,7 @@ async function init() {
             "\nDownloading Firebase configuration..."
         );
 
-        const sdkResult = await getFirebaseSDKConfig(
+        sdkResult = await getFirebaseSDKConfig(
             selectedProject.projectId,
             selectedWebApp.appId
         );
